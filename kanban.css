@@ -1,0 +1,32 @@
+/* kanban */
+
+.kanban {
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: flex-start;
+  justify-content: space-around;
+  height: 100%;
+}
+
+.kanban-column {
+  display: flex;
+  flex: 1;
+  justify-content: space-around;
+  height: 100%;
+  padding: 4px;
+  border-right: 1px solid var(--kanban-column-border);
+}
+
+.kanban-column:last-child {
+  border-right: none;
+}
+
+.kanban-column-title {
+  align-self: start;
+  width: 100%;
+  padding: 3px;
+  border-bottom: 1px solid var(--kanban-column-border);
+  text-align: center;
+  font-weight: bold;
+  color: var(--kanban-column-title);
+}

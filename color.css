@@ -1,0 +1,6 @@
+/* color variable declarations */
+
+:root {
+  --kanban-column-title: #666;
+  --kanban-column-border: #ccc;
+}
