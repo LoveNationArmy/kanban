@@ -1,9 +1,13 @@
+import morphdom from './morphdom.js'
+
+let columnId = 0
 
 const columns = []
 
-function createColumn (title) {
+function createColumn (title = 'untitled') {
   const column = {
-    title: title || 'untitled',
+    id: `column_${columnId++}`,
+    title: title,
     cards: []
   }
 
@@ -12,12 +16,12 @@ function createColumn (title) {
   return column
 }
 
-function createCard (content) {
+function createCard (content = '') {
   const parts = content.split('\n')
 
   const card = {
     title: parts[0],
-    content: parts.slice(1).join('\n') || ''
+    content: parts.slice(1).join('\n')
   }
 
   return card
@@ -28,14 +32,14 @@ function renderToHTML () {
 
   columns.forEach(column => {
     const cards = column.cards.map((card, index) => `
-      <div id="${column.title.replace(/[^A-Za-z]/g, '')}_${index}" class="kanban-card" draggable="true" ondragstart="dragstart_handler(event);">
+      <div id="${column.id}_${index}" class="kanban-card" draggable="true" ondragstart="Kanban.dragStart(event)">
         <div class="kanban-card-title">${card.title}</div>
         <div class="kanban-card-content">${card.content}</div>
       </div>
     `)
 
     html += `
-      <div class="kanban-column" ondrop="drop_handler(event);" ondragover="dragover_handler(event);">
+      <div id="${column.id}" class="kanban-column" ondrop="Kanban.drop(event)" ondragover="Kanban.dragOver(event)">
         <div class="kanban-column-title">${column.title}</div>
         <div class="kanban-column-cards">${cards.join('\n')}</div>
       </div>
@@ -45,30 +49,35 @@ function renderToHTML () {
   return html + '</div>'
 }
 
-window.dragstart_handler = function dragstart_handler(ev) {
-  console.log("dragStart: dropEffect = " + ev.dataTransfer.dropEffect + " ; effectAllowed = " + ev.dataTransfer.effectAllowed);
+window.Kanban = {
+  dragStart (event) { // TODO: { dataTransfer, card: target }?
+    event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData('cardId', event.target.id)
+    event.dataTransfer.setData('columnId', event.target.closest('.kanban-column').id.split('_').pop())
+  },
 
-  // Add this element's id to the drag payload so the drop handler will
-  // know which element to add to its tree
-  ev.dataTransfer.setData("text", ev.target.id);
-  ev.dataTransfer.effectAllowed = "move";
-}
+  dragOver (event) {
+    event.preventDefault()
+    event.dataTransfer.dropEffect = 'move'
+  },
 
-window.drop_handler = function drop_handler(ev) {
-  console.log("drop: dropEffect = " + ev.dataTransfer.dropEffect + " ; effectAllowed = " + ev.dataTransfer.effectAllowed);
-  ev.preventDefault();
+  drop (event) {
+    event.preventDefault()
 
-  // Get the id of the target and add the moved element to the target's DOM
-  var data = ev.dataTransfer.getData("text");
-  let target = ev.target.closest('.kanban-column').querySelector('.kanban-column-cards')
-  target.appendChild(document.getElementById(data));
-}
+    const cardId = event.dataTransfer.getData('cardId')
+    const cardIndex = cardId.split('_').pop()
+    const sourceColumnId = event.dataTransfer.getData('columnId')
+    const targetColumnId = event.target.closest('.kanban-column').id.split('_').pop()
 
-window.dragover_handler = function dragover_handler(ev) {
-  console.log("dragOver: dropEffect = " + ev.dataTransfer.dropEffect + " ; effectAllowed = " + ev.dataTransfer.effectAllowed);
-  ev.preventDefault();
-  // Set the dropEffect to move
-  ev.dataTransfer.dropEffect = "move"
+    const card = columns[sourceColumnId].cards.splice(cardIndex, 1)[0]
+    columns[targetColumnId].cards.push(card)
+
+    morphdom(container.firstChild, renderToHTML())
+    // container.innerHTML = renderToHTML()
+
+    // let target = event.target.closest('.kanban-column').querySelector('.kanban-column-cards')
+    // target.appendChild(document.getElementById(data));
+  }
 }
 
 let backlog = createColumn('backlog')
@@ -100,4 +109,4 @@ done.cards.push(card)
 done.cards.push(card)
 done.cards.push(card)
 
-container.innerHTML = renderToHTML()
+morphdom(container.firstChild, renderToHTML())
