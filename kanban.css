@@ -11,9 +11,8 @@
 .kanban-column {
   display: flex;
   flex: 1;
-  justify-content: space-around;
-  height: 100%;
-  padding: 4px;
+  flex-flow: column nowrap;
+  min-height: 100%;
   border-right: 1px solid var(--kanban-column-border);
 }
 
@@ -22,11 +21,33 @@
 }
 
 .kanban-column-title {
-  align-self: start;
-  width: 100%;
-  padding: 3px;
+  position: sticky;
+  top: 0px;
+  left: 0;
+  padding: 7px;
+  margin: 0 4px;
   border-bottom: 1px solid var(--kanban-column-border);
   text-align: center;
-  font-weight: bold;
+  letter-spacing: 1.5px;
+  background: white;
   color: var(--kanban-column-title);
+}
+
+.kanban-card {
+  margin: 10px 8px;
+  border-radius: 3px;
+  border: 1px solid var(--kanban-card-border);
+}
+
+.kanban-card-title {
+  background: rgba(0,0,0,.055);
+  padding: 6px 6px;
+  font-weight: bold;
+  color: var(--kanban-card-title);
+}
+
+.kanban-card-content {
+  padding: 4px 9px 5px;
+  white-space: pre-wrap;
+  color: var(--kanban-card-content);
 }

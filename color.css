@@ -1,6 +1,10 @@
 /* color variable declarations */
 
 :root {
-  --kanban-column-title: #666;
   --kanban-column-border: #ccc;
+  --kanban-column-title: #777;
+
+  --kanban-card-border: #bbb;
+  --kanban-card-title: #559;
+  --kanban-card-content: #555;
 }
