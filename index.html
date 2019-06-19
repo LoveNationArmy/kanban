@@ -7,7 +7,44 @@
     <link rel="stylesheet" href="./kanban.css">
   </head>
   <body>
-    <div id="container"><div></div></div>
-    <script type="module" src="./kanban.js"></script>
+    <div id="container"></div>
+    <script type="module">
+      import Kanban from './kanban.js'
+
+      window.Kanban = Kanban
+
+      const board = new Kanban(container)
+
+      const backlog = board.createColumn('backlog')
+      const todo = board.createColumn('todo')
+      const in_progress = board.createColumn('in progress')
+      const done = board.createColumn('done')
+
+      const card = board.createCard('Hello, world\nGreetings\npeople\nThis is a card and it has some quite long content that should wrap.')
+      backlog.cards.push(card)
+      backlog.cards.push(card)
+      backlog.cards.push(card)
+      backlog.cards.push(card)
+      backlog.cards.push(card)
+      backlog.cards.push(card)
+      backlog.cards.push(card)
+      todo.cards.push(card)
+      todo.cards.push(card)
+      todo.cards.push(card)
+      in_progress.cards.push(card)
+      done.cards.push(card)
+      done.cards.push(card)
+      done.cards.push(card)
+      done.cards.push(card)
+      done.cards.push(card)
+      done.cards.push(card)
+      done.cards.push(card)
+      done.cards.push(card)
+      done.cards.push(card)
+      done.cards.push(card)
+      done.cards.push(card)
+
+      board.render()
+    </script>
   </body>
 </html>
