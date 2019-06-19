@@ -27,15 +27,15 @@ function renderToHTML () {
   let html = '<div class="kanban">'
 
   columns.forEach(column => {
-    const cards = column.cards.map(card => `
-      <div class="kanban-card">
+    const cards = column.cards.map((card, index) => `
+      <div id="${column.title.replace(/[^A-Za-z]/g, '')}_${index}" class="kanban-card" draggable="true" ondragstart="dragstart_handler(event);">
         <div class="kanban-card-title">${card.title}</div>
         <div class="kanban-card-content">${card.content}</div>
       </div>
     `)
 
     html += `
-      <div class="kanban-column">
+      <div class="kanban-column" ondrop="drop_handler(event);" ondragover="dragover_handler(event);">
         <div class="kanban-column-title">${column.title}</div>
         <div class="kanban-column-cards">${cards.join('\n')}</div>
       </div>
@@ -43,6 +43,32 @@ function renderToHTML () {
   })
 
   return html + '</div>'
+}
+
+window.dragstart_handler = function dragstart_handler(ev) {
+  console.log("dragStart: dropEffect = " + ev.dataTransfer.dropEffect + " ; effectAllowed = " + ev.dataTransfer.effectAllowed);
+
+  // Add this element's id to the drag payload so the drop handler will
+  // know which element to add to its tree
+  ev.dataTransfer.setData("text", ev.target.id);
+  ev.dataTransfer.effectAllowed = "move";
+}
+
+window.drop_handler = function drop_handler(ev) {
+  console.log("drop: dropEffect = " + ev.dataTransfer.dropEffect + " ; effectAllowed = " + ev.dataTransfer.effectAllowed);
+  ev.preventDefault();
+
+  // Get the id of the target and add the moved element to the target's DOM
+  var data = ev.dataTransfer.getData("text");
+  let target = ev.target.closest('.kanban-column').querySelector('.kanban-column-cards')
+  target.appendChild(document.getElementById(data));
+}
+
+window.dragover_handler = function dragover_handler(ev) {
+  console.log("dragOver: dropEffect = " + ev.dataTransfer.dropEffect + " ; effectAllowed = " + ev.dataTransfer.effectAllowed);
+  ev.preventDefault();
+  // Set the dropEffect to move
+  ev.dataTransfer.dropEffect = "move"
 }
 
 let backlog = createColumn('backlog')
