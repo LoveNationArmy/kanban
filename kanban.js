@@ -41,10 +41,7 @@ export default class Kanban {
           draggable="true"
           ondragstart="Kanban.dragStart(event)"
           ondblclick="Kanban.editCard(event)"
-          >
-          <div class="kanban-card-title">${card.title}</div>
-          <div class="kanban-card-content">${card.content}</div>
-        </div>
+          ><div class="kanban-card-title">${card.title}</div>\n<div class="kanban-card-content">${card.content}</div></div>
       `)
 
       html += `
@@ -163,7 +160,8 @@ export default class Kanban {
     const columnId = cardElement.closest('.kanban-column').dataset.id
     const cardIndex = cardElement.dataset.index
 
-    cardElement.contentEditable = 'true'
+    cardElement.innerHTML = cardElement.textContent
+    cardElement.contentEditable = 'plaintext-only'
     cardElement.addEventListener('blur', onblur)
     cardElement.focus()
 

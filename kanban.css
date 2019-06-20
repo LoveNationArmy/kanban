@@ -41,6 +41,10 @@
   border: 1px solid var(--kanban-card-border);
 }
 
+.kanban-card[contenteditable] {
+  padding: 10px 8px 11px;
+}
+
 .kanban-card-placeholder {
   opacity: 0.5;
 }
