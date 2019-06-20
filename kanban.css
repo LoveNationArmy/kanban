@@ -34,10 +34,15 @@
   color: var(--kanban-column-title);
 }
 
-.kanban-card {
+.kanban-card,
+.kanban-card-placeholder {
   margin: 10px 8px;
   border-radius: 3px;
   border: 1px solid var(--kanban-card-border);
+}
+
+.kanban-card-placeholder {
+  opacity: 0.5;
 }
 
 .kanban-card-title {
