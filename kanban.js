@@ -36,7 +36,12 @@ export default class Kanban {
 
     this.columns.forEach(column => {
       const cards = column.cards.map((card, index) => `
-        <div class="kanban-card" data-index="${index}" draggable="true" ondragstart="Kanban.dragStart(event)">
+        <div class="kanban-card"
+          data-index="${index}"
+          draggable="true"
+          ondragstart="Kanban.dragStart(event)"
+          ondblclick="Kanban.editCard(event)"
+          >
           <div class="kanban-card-title">${card.title}</div>
           <div class="kanban-card-content">${card.content}</div>
         </div>
@@ -69,8 +74,8 @@ export default class Kanban {
     const parts = content.split('\n')
 
     const card = {
-      title: parts[0],
-      content: parts.slice(1).join('\n')
+      title: parts[0].trim(),
+      content: parts.slice(1).join('\n').trim()
     }
 
     return card
@@ -78,15 +83,24 @@ export default class Kanban {
 
   dropListener (event) {
     if (event.data.kanbanId == this.id) {
-      const card = this.columns[event.data.sourceColumnId].cards.splice(event.data.sourceCardIndex, 1)[0]
+      if (event.data.type === 'move') {
+        const card = this.columns[event.data.sourceColumnId].cards.splice(event.data.sourceCardIndex, 1)[0]
 
-      const targetCardIndex = placeholder.lastBefore.dataset.index
+        const targetCardIndex = placeholder.lastBefore.dataset.index
 
-      if (targetCardIndex) {
-        this.columns[event.data.targetColumnId].cards.splice(targetCardIndex, 0, card)
-      } else {
-        this.columns[event.data.targetColumnId].cards.push(card)
+        if (targetCardIndex) {
+          this.columns[event.data.targetColumnId].cards.splice(targetCardIndex, 0, card)
+        } else {
+          this.columns[event.data.targetColumnId].cards.push(card)
+        }
+      } else if (event.data.type === 'edit') {
+        const card = this.columns[event.data.columnId].cards[event.data.cardIndex]
+        const parts = event.data.content.split('\n')
+
+        card.title = parts[0].trim()
+        card.content = parts.slice(1).join('\n').trim()
       }
+
       this.render()
     }
   }
@@ -107,7 +121,6 @@ export default class Kanban {
   static dragOver (event) {
     event.preventDefault()
     event.dataTransfer.dropEffect = 'move'
-
 
     const closestCard = event.target.closest('.kanban-card')
 
@@ -136,10 +149,36 @@ export default class Kanban {
     placeholder.parentNode.removeChild(placeholder)
 
     window.postMessage({
+      type: 'move',
       kanbanId,
       sourceCardIndex,
       sourceColumnId,
       targetColumnId
     })
+  }
+
+  static editCard (event) {
+    const cardElement = event.target.closest('.kanban-card')
+    const kanbanId = cardElement.closest('.kanban').dataset.id
+    const columnId = cardElement.closest('.kanban-column').dataset.id
+    const cardIndex = cardElement.dataset.index
+
+    cardElement.contentEditable = 'true'
+    cardElement.addEventListener('blur', onblur)
+    cardElement.focus()
+
+    function onblur () {
+      const content = cardElement.textContent.trim()
+
+      window.postMessage({
+        type: 'edit',
+        kanbanId,
+        columnId,
+        cardIndex,
+        content
+      })
+
+      cardElement.removeEventListener('blur', onblur)
+    }
   }
 }
