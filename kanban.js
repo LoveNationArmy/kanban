@@ -1,14 +1,11 @@
 import morphdom from './morphdom.js'
 
-// ids are incrementally numbered as a singleton
-// in order to avoid id collisions
-let kanbanId = 0
+let kanbans = []
+let holdingCard
 
 const placeholder = document.createElement('div')
 placeholder.className = 'kanban-card kanban-card-placeholder'
 placeholder.lastBefore = { dataset: {} }
-
-let holdingCard
 
 /**
  * Kanban
@@ -16,7 +13,8 @@ let holdingCard
 
 export default class Kanban {
   constructor (el) {
-    this.id = kanbanId++
+    this.id = kanbans.length
+    kanbans.push(this)
     this.el = el
     this.columns = []
     this.dropListener = this.dropListener.bind(this)
@@ -45,8 +43,11 @@ export default class Kanban {
       `)
 
       html += `
-        <div class="kanban-column" data-id="${column.id}">
-          <div class="kanban-column-title">${column.title}</div>
+        <div class="kanban-column" data-id="${column.id}" ondblclick="Kanban.createCard(${this.id},${column.id},true)">
+          <div class="kanban-column-title" ondblclick="event.stopPropagation()">
+            <button class="kanban-button-create-card" onclick="Kanban.createCard(${this.id},${column.id},true)">+</button>
+            ${column.title}
+          </div>
           <div class="kanban-column-cards">${cards.join('\n')}</div>
         </div>
       `
@@ -155,6 +156,8 @@ export default class Kanban {
   }
 
   static editCard (event) {
+    event.stopPropagation()
+
     const cardElement = event.target.closest('.kanban-card')
     const kanbanId = cardElement.closest('.kanban').dataset.id
     const columnId = cardElement.closest('.kanban-column').dataset.id
@@ -177,6 +180,34 @@ export default class Kanban {
       })
 
       cardElement.removeEventListener('blur', onblur)
+    }
+  }
+
+  static createCard (kanbanId, columnId, focus = false) {
+    const board = kanbans[kanbanId]
+    const card = board.createCard()
+    board.columns[columnId].cards.unshift(card)
+    board.render()
+    if (focus) {
+      const cardElement = board.el.querySelector(`.kanban-column[data-id="${columnId}"] .kanban-card`)
+      cardElement.innerHTML = cardElement.textContent
+      cardElement.contentEditable = 'plaintext-only'
+      cardElement.addEventListener('blur', onblur)
+      cardElement.focus()
+
+      function onblur () {
+        const content = cardElement.textContent.trim()
+
+        window.postMessage({
+          type: 'edit',
+          kanbanId,
+          columnId,
+          cardIndex: 0,
+          content
+        })
+
+        cardElement.removeEventListener('blur', onblur)
+      }
     }
   }
 }

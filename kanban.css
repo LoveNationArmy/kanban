@@ -61,3 +61,25 @@
   white-space: pre-wrap;
   color: var(--kanban-card-content);
 }
+
+.kanban-button-create-card {
+  position: absolute;
+  opacity: 0;
+  right: 0px;
+  top: 5px;
+  border-radius: 100px;
+  width: 20px;
+  height: 20px;
+  background: none;
+  border: 1px solid #eee;
+  color: #444;
+}
+
+.kanban-column-title:hover .kanban-button-create-card,
+.kanban-button-create-card:focus {
+  opacity: 1;
+}
+
+.kanban-button-create-card:hover {
+  border-color: #444;
+}
