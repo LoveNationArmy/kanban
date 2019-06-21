@@ -92,11 +92,15 @@ export default class Kanban {
           this.columns[event.data.targetColumnId].cards.push(card)
         }
       } else if (event.data.type === 'edit') {
-        const card = this.columns[event.data.columnId].cards[event.data.cardIndex]
-        const parts = event.data.content.split('\n')
+        if (event.data.content.length > 0) {
+          const card = this.columns[event.data.columnId].cards[event.data.cardIndex]
+          const parts = event.data.content.split('\n')
 
-        card.title = parts[0].trim()
-        card.content = parts.slice(1).join('\n').trim()
+          card.title = parts[0].trim()
+          card.content = parts.slice(1).join('\n').trim()
+        } else {
+          this.columns[event.data.columnId].cards.splice(event.data.cardIndex, 1)
+        }
       }
 
       this.render()
