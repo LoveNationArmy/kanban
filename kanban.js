@@ -1,5 +1,8 @@
 import morphdom from './morphdom.js'
 
+const VERSION = '1'
+
+let kanbanStore = window.localStorage.kanban ? JSON.parse(window.localStorage.kanban) : {}
 let kanbans = []
 let holdingCard
 
@@ -12,13 +15,32 @@ placeholder.lastBefore = { dataset: {} }
  */
 
 export default class Kanban {
-  constructor (el) {
+  constructor (el, name = 'default') {
     this.id = kanbans.length
+    this.name = name
     kanbans.push(this)
     this.el = el
     this.columns = []
     this.dropListener = this.dropListener.bind(this)
     window.addEventListener('message', this.dropListener)
+
+    if (name in kanbanStore) {
+      const store = kanbanStore[name]
+      if (store.version === VERSION) {
+        this.columns = store.data
+      } else {
+        alert(`Kanban data version mismatch.\nCurrent: ${VERSION}\nStored: ${store.version}`)
+      }
+    }
+  }
+
+  save () {
+    kanbanStore[this.name] = {
+      version: VERSION,
+      data: this.columns
+    }
+
+    window.localStorage.kanban = JSON.stringify(kanbanStore)
   }
 
   destroy () {
@@ -27,6 +49,7 @@ export default class Kanban {
 
   render () {
     morphdom(this.el, this.renderToHTML())
+    this.save() // any render, means there was data change, so we save
   }
 
   renderToHTML () {
@@ -39,13 +62,16 @@ export default class Kanban {
           draggable="true"
           ondragstart="Kanban.dragStart(event)"
           ondblclick="Kanban.editCard(event)"
+          onkeyup="!this.isContentEditable && Kanban.editCard(event)"
+          onkeydown="event.which === 27 && this.blur()"
+          tabindex="100"
           ><div class="kanban-card-title">${card.title}</div>\n<div class="kanban-card-content">${card.content}</div></div>
       `)
 
       html += `
         <div class="kanban-column" data-id="${column.id}" ondblclick="Kanban.createCard(${this.id},${column.id},true)">
           <div class="kanban-column-title" ondblclick="event.stopPropagation()">
-            <button class="kanban-button-create-card" onclick="Kanban.createCard(${this.id},${column.id},true)">+</button>
+            <button class="kanban-button-create-card" onclick="Kanban.createCard(${this.id},${column.id},true)" tabindex="1">+</button>
             ${column.title}
           </div>
           <div class="kanban-column-cards">${cards.join('\n')}</div>
@@ -57,6 +83,8 @@ export default class Kanban {
   }
 
   createColumn (title = 'untitled') {
+    if (this.columns.find(c => c.title === title)) return
+
     const column = {
       id: this.columns.length,
       title: title,
@@ -93,6 +121,13 @@ export default class Kanban {
         }
       } else if (event.data.type === 'edit') {
         const card = this.columns[event.data.columnId].cards[event.data.cardIndex]
+        const content = event.data.content.trim()
+        if (!content) {
+          this.columns[event.data.columnId].cards.splice(event.data.cardIndex, 1)
+          this.render()
+          return
+        }
+
         const parts = event.data.content.split('\n')
 
         card.title = parts[0].trim()
@@ -164,7 +199,9 @@ export default class Kanban {
     const cardIndex = cardElement.dataset.index
 
     cardElement.innerHTML = cardElement.textContent
+    cardElement.setAttribute('draggable', 'false')
     cardElement.contentEditable = 'plaintext-only'
+    cardElement.blur() // this is a browser bug workaround otherwise focus is not given to the element when tabindex is set
     cardElement.addEventListener('blur', onblur)
     cardElement.focus()
 
@@ -191,6 +228,7 @@ export default class Kanban {
     if (focus) {
       const cardElement = board.el.querySelector(`.kanban-column[data-id="${columnId}"] .kanban-card`)
       cardElement.innerHTML = cardElement.textContent
+      cardElement.setAttribute('draggable', 'false')
       cardElement.contentEditable = 'plaintext-only'
       cardElement.addEventListener('blur', onblur)
       cardElement.focus()
